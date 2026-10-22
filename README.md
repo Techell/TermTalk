@@ -4,6 +4,8 @@
 
 # TermTalk
 
+[![Windows CI](https://github.com/Techell/TermTalk/actions/workflows/windows.yml/badge.svg)](https://github.com/Techell/TermTalk/actions/workflows/windows.yml)
+
 A terminal messenger for Windows, written in C. Private conversations, file transfers
 and a keyboard-driven interface — with a small, modular client/server core.
 
@@ -96,7 +98,7 @@ assets/     Project branding
 tests/     Contract tests and independent protocol clients
 tools/     Roadmap tooling
 docs/      User guide, architecture and protocol specifications
-.github/    Proposed CI and contribution templates
+.github/    CI and contribution templates
 ```
 
 ## Documentation and contributing

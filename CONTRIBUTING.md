@@ -9,7 +9,9 @@ The project is distributed under the [MIT License](LICENSE).
 Use the [README](README.md) build instructions. Configure with Python 3 installed
 for all 15 CTest checks. For legacy MinGW Make use `comp.bat`; generated files
 belong in `build/` and must not be committed. See [verification](docs/BUILD-VERIFICATION.md).
-The proposed Windows GitHub Actions workflow has not yet run on GitHub.
+The Windows GitHub Actions workflow builds and tests with MSYS2/MinGW.
+Check the [current CI result](https://github.com/Techell/TermTalk/actions/workflows/windows.yml)
+for the commit under review.
 
 ## Making a change
 
