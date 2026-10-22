@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" role="img" aria-labelledby="title desc">
+  <title id="title">TermTalk</title>
+  <desc id="desc">A mint terminal prompt in a speech bubble beside the TermTalk wordmark.</desc>
+  <rect width="820" height="240" rx="28" fill="#101820"/>
+  <path d="M62 52h112a16 16 0 0 1 16 16v88a16 16 0 0 1-16 16h-64l-30 24v-24H62a16 16 0 0 1-16-16V68a16 16 0 0 1 16-16Z" fill="none" stroke="#73e5b1" stroke-width="7" stroke-linejoin="round"/>
+  <path d="m78 88 25 24-25 24m43 0h35" fill="none" stroke="#73e5b1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="232" y="126" fill="#edf6f4" font-family="Consolas, 'Cascadia Code', monospace" font-weight="700" font-size="66" letter-spacing="-3">Term<tspan fill="#73e5b1">Talk</tspan></text>
+  <text x="237" y="164" fill="#9cacae" font-family="Consolas, monospace" font-size="18" letter-spacing="1">MESSAGES. FILES. TERMINAL.</text>
+</svg>

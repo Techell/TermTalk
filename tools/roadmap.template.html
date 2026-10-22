@@ -1,0 +1,109 @@
+<div id="winsock-roadmap">
+  <style>
+    #winsock-roadmap { color:var(--foreground); }
+    #winsock-roadmap .rm-stages { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; margin:18px 0; }
+    #winsock-roadmap .rm-stage { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+    #winsock-roadmap .rm-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:22px; margin-top:16px; }
+    #winsock-roadmap .rm-list { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+    #winsock-roadmap .rm-links { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    #winsock-roadmap .rm-detail { min-width:0; }
+    #winsock-roadmap .rm-detail p { overflow-wrap:anywhere; }
+    #winsock-roadmap li { margin-bottom:8px; }
+    #winsock-roadmap h2 { padding-inline-end:90px; }
+    #winsock-roadmap .rm-footer { margin-top:20px; }
+    @media(max-width:560px) { #winsock-roadmap .rm-body { grid-template-columns:1fr; } }
+  </style>
+  <h2>TermTalk · карта разработки</h2>
+  <p class="text-small" data-rm="scope"></p>
+  <div class="viz-row"><span class="tabular-nums" data-rm="count"></span><span class="viz-badge" data-rm="blocked"></span></div>
+  <div class="progress" role="progressbar" aria-label="Завершённые задачи" aria-valuemin="0" data-rm="progress"><div class="progress-bar" data-rm="fill"></div></div>
+  <div class="rm-stages" data-rm="stages" aria-label="Этапы разработки"></div>
+  <hr>
+  <div class="rm-body">
+    <section><h3 data-rm="stage-title"></h3><p class="text-small" data-rm="stage-goal"></p><div class="rm-list" data-rm="tasks"></div></section>
+    <section class="rm-detail" aria-live="polite" aria-label="Выбранная задача" data-rm="detail"></section>
+  </div>
+  <details class="rm-footer"><summary>Открытые вопросы</summary><ul data-rm="questions"></ul></details>
+  <details class="rm-footer"><summary>Принятые решения</summary><ul data-rm="decisions"></ul></details>
+  <p class="text-small rm-footer" data-rm="date"></p>
+</div>
+<script type="application/json" id="winsock-roadmap-data">__ROADMAP_DATA__</script>
+<script>
+(() => {
+  const root = document.getElementById('winsock-roadmap');
+  const data = JSON.parse(document.getElementById('winsock-roadmap-data').textContent);
+  const get = name => root.querySelector('[data-rm="' + name + '"]');
+  const byId = new Map(data.tasks.map(t => [t.id, t]));
+  const labels = {done:'Готово', blocked:'Блокер', in_progress:'В работе', review:'На проверке'};
+  const saved = window.openai?.widgetState?.privateContent;
+  let selected = byId.has(saved?.selected) ? saved.selected : 'SERVER-01';
+  const stateLabel = t => labels[t.status] || (t.deps.every(id => byId.get(id).status === 'done') ? 'Можно начать' : 'Ожидает');
+  const el = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
+  function button(text, action, pressed) {
+    const b = el('button', text, 'btn'); b.type = 'button';
+    if (pressed !== undefined) b.setAttribute('aria-pressed', String(pressed));
+    b.addEventListener('click', action); return b;
+  }
+  function remember() {
+    if (typeof window.openai?.setWidgetState === 'function') {
+      const pending = window.openai.setWidgetState({modelContent:{selectedTask:selected, title:byId.get(selected).title}, privateContent:{selected}});
+      if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+    }
+  }
+  function choose(id) { selected = id; render(); remember(); }
+  function links(container, ids) {
+    ids.forEach(id => container.append(button(id + ' · ' + stateLabel(byId.get(id)), () => choose(id))));
+    if (!ids.length) container.append(el('span', 'Нет', 'text-small'));
+  }
+  function render() {
+    const task = byId.get(selected), stage = data.stages.find(s => s.id === task.stage);
+    const done = data.tasks.filter(t => t.status === 'done').length;
+    get('scope').textContent = data.scope + (data.release ? ' · v' + data.release : '');
+    get('count').textContent = done + ' из ' + data.tasks.length + ' задач завершено';
+    get('blocked').textContent = 'Блокеров: ' + data.tasks.filter(t => t.status === 'blocked').length;
+    get('progress').setAttribute('aria-valuemax', String(data.tasks.length));
+    get('progress').setAttribute('aria-valuenow', String(done));
+    get('fill').style.width = (100 * done / data.tasks.length) + '%';
+    get('stages').replaceChildren();
+    data.stages.forEach((s, index) => {
+      const tasks = data.tasks.filter(t => t.stage === s.id);
+      const group = el('div', undefined, 'rm-stage');
+      group.append(button((index + 1) + '. ' + s.title, () => choose(tasks[0].id), s.id === stage.id));
+      group.append(el('span', tasks.filter(t => t.status === 'done').length + '/' + tasks.length + ' готово', 'text-small tabular-nums'));
+      get('stages').append(group);
+    });
+    get('stage-title').textContent = stage.title;
+    get('stage-goal').textContent = stage.goal;
+    get('tasks').replaceChildren();
+    data.tasks.filter(t => t.stage === stage.id).forEach(t => {
+      const row = el('div');
+      row.append(button(t.id, () => choose(t.id), t.id === selected));
+      row.append(el('div', t.title));
+      row.append(el('div', stateLabel(t), 'text-small'));
+      get('tasks').append(row);
+    });
+    const detail = get('detail'); detail.replaceChildren();
+    detail.append(el('h3', task.id + ' · ' + task.title));
+    detail.append(el('span', stateLabel(task), 'viz-badge'));
+    detail.append(el('p', task.requirement, 'text-small'));
+    if (task.blocker) detail.append(el('p', task.blocker));
+    detail.append(el('h3', 'Критерии готовности'));
+    const list = el('ul'); task.criteria.forEach(c => list.append(el('li', c))); detail.append(list);
+    detail.append(el('h3', 'Зависит от'));
+    const upstream = el('div', undefined, 'rm-links'); links(upstream, task.deps); detail.append(upstream);
+    detail.append(el('h3', 'Открывает задачи'));
+    const downstream = el('div', undefined, 'rm-links');
+    links(downstream, data.tasks.filter(t => t.deps.includes(task.id)).map(t => t.id)); detail.append(downstream);
+    if (task.evidence) { detail.append(el('h3', 'Подтверждение')); detail.append(el('p', task.evidence, 'text-small')); }
+    for (const key of ['questions', 'decisions']) {
+      get(key).replaceChildren(); data[key].forEach(item => get(key).append(el('li', item)));
+    }
+    get('date').textContent = 'Снимок: ' + data.updated + ' · Прогресс — по числу задач, без оценки трудозатрат. Связи открываются нажатием на ID.';
+  }
+  window.addEventListener('openai:set_globals', event => {
+    const incoming = event.detail?.globals?.widgetState?.privateContent?.selected;
+    if (byId.has(incoming)) { selected = incoming; render(); }
+  });
+  render();
+})();
+</script>

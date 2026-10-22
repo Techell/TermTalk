@@ -1,0 +1,19 @@
+*.exe
+Build/
+/build-*/
+__pycache__/
+
+# Local build trees, editors and private runtime data
+/build/
+/out/
+.vs/
+.vscode/
+*.user
+*.suo
+*.wsh
+*.wss
+*.part
+/downloads/
+
+# Private local archives, never publish
+/.local/
